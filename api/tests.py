@@ -3,54 +3,27 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from api.serializer import MoviesSerializer
 from api.models import MovieSearchHistory
+from users.models import NewUser
+from rest_framework.test import APIClient
+from django.urls import reverse
+from rest_framework.authtoken.models import Token
 
 
 class MovieHistorySearchTest(APITestCase):
-    def test_add(self):
+    def setUp(self):
 
+        self.client = APIClient()
+        u = NewUser.objects.create_user(
+            user_name='user', first_name="user", email='user@foo.com', password='pass')
+        u.is_active = True
+        u.save()
+        resp = self.client.post(
+            "/api/token/", {'email': 'user@foo.com', 'password': 'pass'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue('access' in resp.data)
+        self.token = resp.data['access']
+
+    def testcase(self):
         response = self.client.get(
-            "/api/movies/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-
-class MovieHistoryPostTest(APITestCase):
-    def test_add(self):
-
-        response = self.client.post(
-            "/api/movies/", data={
-                "title": "Wonder",
-                "released": "1901-01-01",
-                "genre": "Short, Drama, Fantasy",
-                "director": "Mark Brown",
-                "imdbrating": "N/A",
-                "Production": "N/A",
-                "Language": "English",
-                "writer": "Mark Brown",
-                "plot": "'Wonder', in its most concise terms, is a 2.5 minute short story",
-                "favourite": False,
-                "year": "2013",
-                "user": 1
-            })
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-
-class MovieHistoryPutTest(APITestCase):
-    def test_add(self):
-        data = {
-            "title": "Wonder",
-            "released": "1901-01-01",
-            "genre": "Short, Drama, Fantasy",
-            "director": "Mark Brown",
-            "imdbrating": "N/A",
-            "Production": "N/A",
-            "Language": "English",
-            "writer": "Mark Brown",
-            "plot": "'Wonder', in its most concise terms, is a 2.5 minute short story capturing and embellishing the pure awe felt for the natural world as a child. It is a story with a simple goal; to stir ...",
-            "poster": "N/A",
-            "favourite": True,
-            "year": "2013",
-            "user": 1
-        }
-        response = self.client.put(
-            "/api/movies/1/", data=data)
+            "/api/movies/", HTTP_AUTHORIZATION='JWT {}'.format(self.token))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
