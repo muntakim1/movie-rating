@@ -1,0 +1,10 @@
+.App {
+  text-align: center;
+}
+
+.filter{
+  display:flex;
+  justify-content: center;
+  padding: 5px;
+  margin-bottom: 15px
+}
